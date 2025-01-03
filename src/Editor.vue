@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import ChordChart from './ChordChart.vue';
 </script>
 
 <template>
-	<RouterView />
+<ChordChart />
 </template>
 
 <style scoped>
