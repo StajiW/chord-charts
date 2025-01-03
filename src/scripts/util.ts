@@ -74,6 +74,21 @@ export const IntervalCharacters: { [ key in Interval ]: string } = {
 //     21: 9
 // }
 
+export const DistanceToIntervalOptions: { [ key: number ]: Interval[] } = {
+    0: [Interval.Root],
+    1: [Interval.FlatNine, Interval.MinorSecond],
+    2: [Interval.MajorNine, Interval.MajorSecond],
+    3: [Interval.MinorThird, Interval.SharpNine],
+    4: [Interval.MajorThird],
+    5: [Interval.PerfectFourth, Interval.PerfectEleven],
+    6: [Interval.DiminishedFifth, Interval.SharpEleven, Interval.AugmentedFourth],
+    7: [Interval.PerfectFifth],
+    8: [Interval.FlatThirteen, Interval.AugmentedFifth, Interval.MinorSixth],
+    9: [Interval.MajorSixth, Interval.MajorThirteen, Interval.DiminishedSeventh],
+    10: [Interval.MinorSeventh],
+    11: [Interval.MajorSeventh]
+}
+
 export const roots: { [ key: string ]: number } = {
     'C': 0,
     'D': 2,
@@ -85,7 +100,7 @@ export const roots: { [ key: string ]: number } = {
 }
 
 // modulo function that supports negative numbers: https://stackoverflow.com/questions/4467539/javascript-modulo-gives-a-negative-result-for-negative-numbers
-function mod(n: number, m: number): number {
+export function mod(n: number, m: number): number {
     return ((n % m) + m) % m
 }
 

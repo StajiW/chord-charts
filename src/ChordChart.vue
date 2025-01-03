@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Interval, IntervalCharacters } from './scripts/util'
+import { getRootFromChordName, Interval, IntervalCharacters, mod, DistanceToIntervalOptions, getNoteFromFret } from './scripts/util'
 
 type shape = { frets: (number | null)[], baseFret: number }
 
 const FRET_DIST = 4
-const STRING_DIST = 2
+const STRING_DIST = 2.25
 const NOTE_SIZE = 2.5
 
 const currentShape = computed(() => shapeFromInput(shapeInput.value))
-const intervals = [null, Interval.Root, Interval.PerfectFifth, Interval.MinorSeventh, Interval.MinorThird, null]
-const name = computed(() => { return nameInput })
+const intervals = computed(() => computeIntervals(currentShape.value, nameInput.value))
 const numFrets = computed(() => Math.max(4, ...(currentShape.value.frets.filter((fret) => fret !== null))))
+const chordName = computed(() => replaceChordNameCharacters(nameInput.value))
 
 const shapeInput = ref('')
 const nameInput = ref('')
@@ -40,11 +40,34 @@ function shapeFromInput(input: string): shape {
         baseFret: baseFret
     }
 }
+
+function computeIntervals(currentShape: shape, name: string): (Interval | null)[] {
+    try {
+        const root = getRootFromChordName(name)
+        return currentShape.frets.map((fret, string) => {
+            if (fret === null) return null
+            if (fret !== 0) fret += currentShape.baseFret - 1
+            const note = getNoteFromFret(fret, string)
+            return DistanceToIntervalOptions[mod(note - root, 12)][0] 
+        })
+    } catch (err) {
+        return [null, null, null, null, null, null]
+    }
+}
+
+// Replacing with HTML seems like a bad idea
+function replaceChordNameCharacters(name: string): string {
+    return name.replace('b', '♭')
+    .replace('#', '<sup>♯</sup>')
+    .replace('^', '<sup>△</sup>')
+    .replace('0', '<sup>ø</sup>')
+    .replace('o', '°')
+}
 </script>
 
 <template>
 <div class='ChordShapeContainer'>
-    <div class='ChordName'>{{ name }}</div>
+    <div class='ChordName' v-html='chordName'></div>
     <div class='ChordShape LeftHanded' :style='{ width: `${FRET_DIST * (numFrets)}rem`, height: `${STRING_DIST * 5 }rem`}'>
         <div class='Fret' v-for='i in numFrets - 1' :style='{ right: `${FRET_DIST * i}rem` }'/>
         <div class='String' v-for='i in 4' :style='{ top: `${STRING_DIST * i}rem` }'/>
@@ -71,7 +94,7 @@ function shapeFromInput(input: string): shape {
 </div>
 
 <form>
-    <input type='text' placeholder='frets' v-model='shapeInput'/>
+    <input type='text' placeholder='shape' v-model='shapeInput'/>
     <input type='text' placeholder='name' v-model='nameInput'/>
 </form>
 </template>
@@ -83,6 +106,7 @@ function shapeFromInput(input: string): shape {
     padding: 2rem;
     padding-top: .5rem;
     padding-right: 3rem;
+    padding-bottom: 3rem;
 
     box-shadow: 0 0 1rem #DDDDDD;
     border-radius: .5rem;
@@ -91,6 +115,8 @@ function shapeFromInput(input: string): shape {
 }
 
 .ChordName {
+    margin-bottom: .5rem;
+
     font-size: 2rem;
     text-align: center;
     font-weight: bold;
@@ -156,7 +182,7 @@ function shapeFromInput(input: string): shape {
 
 .FretNumber {
     position: absolute;
-    bottom: -1rem;
+    bottom: -2rem;
 
     font-size: 1rem;
     font-weight: bold;
@@ -164,5 +190,27 @@ function shapeFromInput(input: string): shape {
     transform: translate(50%, 50%);
 
     opacity: .5;
+}
+
+input {
+    box-sizing: border-box;
+    display: block;
+
+    padding: .5rem;
+    margin-bottom: 1rem;
+    
+    font-size: 1rem;
+
+    border: 1px solid #BBBBBB;
+    border-radius: .25rem;
+
+    font-family: inherit;
+	font-optical-sizing: inherit;
+	font-weight: inherit;
+	font-style: inherit;
+}
+
+input:focus {
+    outline: 1px solid #BBBBBB;
 }
 </style>

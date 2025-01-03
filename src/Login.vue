@@ -9,7 +9,7 @@ let errorMessage = ref('')
 const router = useRouter()
 
 async function login() {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
     })
@@ -17,8 +17,7 @@ async function login() {
     if (error) {
         errorMessage.value = error.message
     }
-
-    if (data) {
+    else {
         router.push('/editor')
     }
 }
@@ -31,7 +30,7 @@ async function login() {
     <input type='text' v-model='email' placeholder='email' />
     <input type='password' v-model='password' placeholder='password' />
     <input type='submit' value='Log in'/>
-    <div id='errorMessage'>{{ errorMessage }}</div>
+    <div id='errorMessage' v-if='errorMessage'>{{ errorMessage }}</div>
 </form>
 
 </template>
