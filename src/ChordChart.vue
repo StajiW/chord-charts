@@ -1,83 +1,34 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { getRootFromChordName, Interval, IntervalCharacters, mod, DistanceToIntervalOptions, getNoteFromFret } from './scripts/util'
-
-type shape = { frets: (number | null)[], baseFret: number }
+<script setup lang='ts'>
+import { type ChordChart, IntervalCharacters } from './scripts/util'
+import { type PropType, computed } from 'vue'
 
 const FRET_DIST = 4
 const STRING_DIST = 2.25
 const NOTE_SIZE = 2.5
 
-const currentShape = computed(() => shapeFromInput(shapeInput.value))
-const intervals = computed(() => computeIntervals(currentShape.value, nameInput.value))
-const numFrets = computed(() => Math.max(4, ...(currentShape.value.frets.filter((fret) => fret !== null))))
-const chordName = computed(() => replaceChordNameCharacters(nameInput.value))
-
-const shapeInput = ref('')
-const nameInput = ref('')
-
-function shapeFromInput(input: string): shape {
-    let chars = input.split(' ')
-    chars = chars.slice(0, 6)
-    while (chars.length < 6) chars.push('x') // Pad the array up to 6 nulls
-
-    const frets = chars.map((char) => {
-        const num = parseInt(char)
-        if (isNaN(num)) return null
-        if (num < 0 || num > 24) return null
-        return num
-    })
-
-    // Double filter to make the linter happy (???)
-    let baseFret = Math.min(...(frets.filter(fret => (fret !== null)).filter(fret => fret !== 0)))
-    if (isNaN(baseFret) || !isFinite(baseFret)) baseFret = 1
-
-    return {
-        frets: frets.map((fret) => {
-            if (fret === null || fret === 0) return fret
-            return fret - baseFret + 1
-        }),
-        baseFret: baseFret
+const props = defineProps({
+    chordChart: {
+        type: Object as PropType<ChordChart>,
+        required: true
     }
-}
+})
 
-function computeIntervals(currentShape: shape, name: string): (Interval | null)[] {
-    try {
-        const root = getRootFromChordName(name)
-        return currentShape.frets.map((fret, string) => {
-            if (fret === null) return null
-            if (fret !== 0) fret += currentShape.baseFret - 1
-            const note = getNoteFromFret(fret, string)
-            return DistanceToIntervalOptions[mod(note - root, 12)][0] 
-        })
-    } catch (err) {
-        return [null, null, null, null, null, null]
-    }
-}
-
-// Replacing with HTML seems like a bad idea
-function replaceChordNameCharacters(name: string): string {
-    return name.replace('b', '♭')
-    .replace('#', '<sup>♯</sup>')
-    .replace('^', '<sup>△</sup>')
-    .replace('0', '<sup>ø</sup>')
-    .replace('o', '°')
-}
+const numFrets = computed(() => Math.max(4, ...(props.chordChart.frets.filter((fret) => fret !== null))))
 </script>
 
 <template>
 <div class='ChordShapeContainer'>
-    <div class='ChordName' v-html='chordName'></div>
+    <div class='ChordName' v-html='chordChart.name'></div>
     <div class='ChordShape LeftHanded' :style='{ width: `${FRET_DIST * (numFrets)}rem`, height: `${STRING_DIST * 5 }rem`}'>
         <div class='Fret' v-for='i in numFrets - 1' :style='{ right: `${FRET_DIST * i}rem` }'/>
         <div class='String' v-for='i in 4' :style='{ top: `${STRING_DIST * i}rem` }'/>
-        <div class='Note' v-for='(fret, string) in currentShape.frets' >
+        <div class='Note' v-for='(fret, string) in chordChart.frets' >
             <div v-if='fret !== null && fret !== 0' class='Finger' :style='{
                 width: `${NOTE_SIZE}rem`,
                 height: `${NOTE_SIZE}rem`,
                 bottom: `calc(${STRING_DIST * string - NOTE_SIZE / 2}rem - 1.5px)`,
                 right: `calc(${FRET_DIST * fret - NOTE_SIZE / 2 - FRET_DIST / 2}rem + 1.5px)`
-            }'>{{ IntervalCharacters[intervals[string]!] }}</div>
+            }'>{{ IntervalCharacters[chordChart.intervals[string]!] }}</div>
             <div class='Cross' v-if='fret === null' :style='{
                 width: `${NOTE_SIZE}rem`,
                 height: `${NOTE_SIZE}rem`,
@@ -87,16 +38,11 @@ function replaceChordNameCharacters(name: string): string {
                 width: `${NOTE_SIZE}rem`,
                 height: `${NOTE_SIZE}rem`,
                 bottom: `${STRING_DIST * string - NOTE_SIZE / 2}rem`
-            }'>{{ IntervalCharacters[intervals[string]!] }}</div>
+            }'>{{ IntervalCharacters[chordChart.intervals[string]!] }}</div>
         </div>
-        <div class='FretNumber' v-for='i in numFrets' :style='{ right: `${i * FRET_DIST - FRET_DIST / 2}rem` }'>{{ currentShape.baseFret + i - 1 }}</div>
+        <div class='FretNumber' v-for='i in numFrets' :style='{ right: `${i * FRET_DIST - FRET_DIST / 2}rem` }'>{{ chordChart.baseFret + i - 1 }}</div>
     </div>
 </div>
-
-<form>
-    <input type='text' placeholder='shape' v-model='shapeInput'/>
-    <input type='text' placeholder='name' v-model='nameInput'/>
-</form>
 </template>
 
 <style scoped>
@@ -190,27 +136,5 @@ function replaceChordNameCharacters(name: string): string {
     transform: translate(50%, 50%);
 
     opacity: .5;
-}
-
-input {
-    box-sizing: border-box;
-    display: block;
-
-    padding: .5rem;
-    margin-bottom: 1rem;
-    
-    font-size: 1rem;
-
-    border: 1px solid #BBBBBB;
-    border-radius: .25rem;
-
-    font-family: inherit;
-	font-optical-sizing: inherit;
-	font-weight: inherit;
-	font-style: inherit;
-}
-
-input:focus {
-    outline: 1px solid #BBBBBB;
 }
 </style>

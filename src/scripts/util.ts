@@ -1,3 +1,12 @@
+export type Fret = (number | null)
+export type Shape = { frets: (number | null)[], baseFret: number }
+export type ChordChart = {
+    name: string,
+    frets: Fret[],
+    baseFret: number,
+    intervals: (Interval | null)[]
+}
+
 export enum Interval {
     Root,
     MinorSecond,

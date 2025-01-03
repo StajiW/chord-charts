@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import ChordChart from './ChordChart.vue';
+import ChordChartEditor from './ChordChartEditor.vue'
 </script>
 
 <template>
-<ChordChart />
+<ChordChartEditor />
 </template>
 
 <style scoped>

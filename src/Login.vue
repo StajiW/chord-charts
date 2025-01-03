@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
-import { supabase } from './scripts/supabaseClient.ts'
+import { supabase } from './scripts/supabaseClient'
 import { useRouter } from 'vue-router'
 
 let email: string = ''
